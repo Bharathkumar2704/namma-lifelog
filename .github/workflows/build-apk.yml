@@ -24,7 +24,8 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - uses: android-actions/setup-android@v3
+      - name: Android SDK (preinstalled on runner)
+        run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties && ls $ANDROID_HOME/platforms | tail -3
 
       - name: Install web + Capacitor
         run: npm ci
