@@ -1,0 +1,8 @@
+{
+  "appId": "com.namma.lifelog",
+  "appName": "Namma LifeLog",
+  "webDir": "www",
+  "plugins": {
+    "LocalNotifications": { "smallIcon": "ic_stat_notify", "iconColor": "#C2410C" }
+  }
+}

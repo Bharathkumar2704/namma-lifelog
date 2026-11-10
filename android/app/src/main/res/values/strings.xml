@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Namma LifeLog</string>
+    <string name="title_activity_main">Namma LifeLog</string>
+    <string name="package_name">com.namma.lifelog</string>
+    <string name="custom_url_scheme">com.namma.lifelog</string>
+    <string name="widget_title">Namma LifeLog\nTap 🎙️ to log</string>
+    <string name="widget_desc">Quick log by voice or keyboard</string>
+    <string name="widget_voice">Log by voice</string>
+    <string name="widget_type">Log by typing</string>
+</resources>

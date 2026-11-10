@@ -1,0 +1,56 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install web + Capacitor
+        run: npm ci
+
+      - name: Copy web app into Android project
+        run: npx cap sync android
+
+      - name: Build APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk NammaLifeLog.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NammaLifeLog-apk
+          path: NammaLifeLog.apk
+
+      - name: Publish as "latest" download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest NammaLifeLog.apk \
+            --title "Namma LifeLog build #${{ github.run_number }}" \
+            --notes "Download NammaLifeLog.apk on your phone and tap it to install/update. Built from ${{ github.sha }}."
