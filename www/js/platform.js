@@ -24,11 +24,20 @@ const Platform = (function(){
         if(dbx && userx){
           const id = await userx.id();
           if(id){
-            base='data/users/'+id+'/state';
-            const snap = await Promise.race([dbx.doc(base+'/main').get(), new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),10000))]);
+            base='data/users/'+id;
+            const tmo = pr => Promise.race([pr, new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),10000))]);
+            const snap = await tmo(dbx.doc(base+'/lifelog').get());
             db = dbx; P.synced = true;
             const v = snap && (typeof snap.data==='function' ? snap.data() : (snap.data ?? snap));
             if(v && v.json) return JSON.parse(v.json);
+            // migrate from the first version (meta + e_* docs)
+            try{
+              const cs = await tmo(dbx.collection(base).get());
+              let arr = cs && (cs.docs || (Array.isArray(cs)?cs:null)); if(!arr && cs && typeof cs==='object') arr = Object.keys(cs).map(k=>({id:k,data:cs[k]}));
+              const docs=(arr||[]).map(d=>({id:String(d.id ?? (d.ref&&d.ref.id) ?? (d.path||'')).split('/').pop(), data: typeof d.data==='function'?d.data():(d.data??d)}));
+              const meta=docs.find(d=>d.id==='meta'); const ents=docs.filter(d=>/^e_/.test(d.id)).map(d=>d.data);
+              if(meta && meta.data && meta.data.members && meta.data.members.length) return {members:meta.data.members, entries:ents, settings:{active:(meta.data.settings||{}).active}};
+            }catch(e){}
           }
         }
       }catch(e){ console.warn(e); }
@@ -42,7 +51,7 @@ const Platform = (function(){
     clearTimeout(saveT);
     saveT = setTimeout(()=>{
       if(isNative) q(()=>plug('Preferences').set({key:KEY, value:json}));
-      else if(db) q(()=>db.doc(base+'/main').set({json, at:Date.now()}));
+      else if(db) q(()=>db.doc(base+'/lifelog').set({json, at:Date.now()}));
     }, 400);
   };
 
